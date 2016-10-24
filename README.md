@@ -6,14 +6,14 @@ the second report will contain the passed ones what failed before. But you will 
 Why not merge it ?  This tool help for you in that case.
 
 Features:
--Removing failed testcases from the first tesreport what is passed in the second test report.
--Adding testcases what is passed and faied before.
--Creting a new xml what is merged.
+- Removing failed testcases from the first tesreport what is passed in the second test report.
+- Adding testcases what is passed and faied before.
+- Creting a new xml what is merged.
 
 This software code is developed in Python2.7.
 
 Used built in libraries:
--ElementTree
--Tkinter
--Some easyGUI modules
+- ElementTree
+- Tkinter
+- Some easyGUI modules
 
