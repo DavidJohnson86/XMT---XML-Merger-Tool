@@ -1,0 +1,16 @@
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "Tkinter.pyc", line 1536, in __call__
+  File "xmlAppGUI.py", line 118, in okbutton
+  File "xmlAppGUI.py", line 152, in process
+  File "xmlApp.pyc", line 101, in get_rightValues
+  File "xml\etree\ElementTree.pyc", line 802, in write
+IOError: [Errno 13] Permission denied: 'E:\\\\output.xml'
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "Tkinter.pyc", line 1536, in __call__
+  File "xmlAppGUI.py", line 118, in okbutton
+  File "xmlAppGUI.py", line 152, in process
+  File "xmlApp.pyc", line 101, in get_rightValues
+  File "xml\etree\ElementTree.pyc", line 802, in write
+IOError: [Errno 13] Permission denied: 'E:\\\\output.xml'
