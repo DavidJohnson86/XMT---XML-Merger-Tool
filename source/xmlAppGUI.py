@@ -18,6 +18,7 @@ import Tkinter as tk
 import tkMessageBox
 import xmlApp
 import ntpath
+import time
 ntpath.basename("a/b/c")
 from easygui import fileopenbox, diropenbox
 import xml.etree.ElementTree as ET
@@ -31,10 +32,9 @@ class MainApplication(tk.Frame):
         self.parent = tk.Frame(parent)
         self.parent.pack()
         root.title('Xml Merger tool for BMW ACSM5')
-        self.file_list = u''
-        self.file_listtwo = u''
+        self.file_one = u''
+        self.file_two = u''
         self.save_list = u''
-        self.running = True
         self.initUI()
 
     def initUI(self):
@@ -46,7 +46,7 @@ class MainApplication(tk.Frame):
         stepOne = tk.LabelFrame(self.parent, text=" 1. Enter File Details: ")
         stepOne.grid(row=0, columnspan=7, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
         # OKAY Button
-        stepThree = tk.Button(self.parent, text="OK", command=self.okbutton)
+        stepThree = tk.Button(self.parent, text="Merge", command=self.mergeButton)
         stepThree.grid(row=3, column=0, sticky='W' + 'E', padx=5, pady=5, ipadx=20, ipady=5)
         # Cancel Button
         stepFour = tk.Button(self.parent, text="Cancel", command=self.cancelbutton)
@@ -90,20 +90,20 @@ class MainApplication(tk.Frame):
 
     def browseFirst(self):
         '''Select the files to Edit'''
-        self.file_list = fileopenbox(
+        self.file_one = fileopenbox(
             default=r'd:\\',
             multiple=True)
-        if self.file_list:
-            for item in self.file_list:
+        if self.file_one:
+            for item in self.file_one:
                 self.inFileTxt.insert(0, str(item.encode('utf-8')))
 
     def browseSecond(self):
         '''Select the files to Edit'''
-        self.file_listtwo = fileopenbox(
+        self.file_two = fileopenbox(
             default=r'd:\\',
             multiple=True)
-        if self.file_listtwo:
-            for item in self.file_listtwo:
+        if self.file_two:
+            for item in self.file_two:
                 self.inFileTxt2.insert(0, str(item.encode('utf-8')))
 
     def savebutton(self):
@@ -112,10 +112,10 @@ class MainApplication(tk.Frame):
         if self.save_list:
             self.outFileTxt.insert(0, self.save_list.encode('utf-8'))
 
-    def okbutton(self):
+    def mergeButton(self):
         '''Input Verification and start the process'''
-        if self.file_list and self.file_listtwo and self.save_list:
-            self.process()
+        if self.file_one and self.file_two and self.save_list:
+            self.parse('merge')
         else:
             self.errormessage()
 
@@ -126,36 +126,51 @@ class MainApplication(tk.Frame):
         '''Show an Error window'''
         tkMessageBox.showinfo("Error", "Missing Data")
 
+    def process(self):
+        #===========================================================================
+        listofRightval = xmlApp.bmwXmlApp(
+            self.source,
+            self.source_root).set_rightValues(
+            self.listofRepaired,
+            self.destination_root,
+            self.source_root, self.output)
+        tkMessageBox.showinfo(
+            "Merge Finished", str(
+                listofRightval[0]) + ' values has been modified. See Log File in the Log directory. ')
+        self.logging(listofRightval)
+
+        #===========================================================================
+
+    def parse(self, task):
+        self.source = ET.parse(self.file_one[0])
+        self.source_root = self.source.getroot()
+        self.destination = ET.parse(self.file_two[0])
+        self.destination_root = self.destination.getroot()
+        self.output = self.save_list
+        self.listofFailed = xmlApp.bmwXmlApp(self.source, self.source_root).get_failedtest()
+        self.listofRepaired = xmlApp.bmwXmlApp(
+            self.destination,
+            self.destination_root).get_isitrepaired(self.listofFailed)
+        if task == 'merge':
+            self.process()
+
+    def logging(self, listofFiles):
+        timestamp = 'ACSM5_' + str(time.strftime('%Y_%m_%d_%H_%M'))
+        file = open(r'Log\\' + timestamp, "w")
+        file.write('Merge Finished ' + str(listofFiles[0]) + ' test cases has been modified. ')
+        file.write(str(time.strftime('\n' + 'Date: ' '%Y-%m-%d:%H:%M')) + '\n')
+        file.write('Main Report File          :      ' + str(self.path_leaf(str(self.file_one[0]))))
+        file.write('\n' +
+                   'Secondary Report File     :      ' +
+                   str(self.path_leaf(str(self.file_two[0]))))
+        file.write('\n' + '-' * 60 + '\n')
+        [file.write(i + '\n') for i in listofFiles[1]]
+        file.close()
+
     def path_leaf(self, path):
         '''Extract file name from path '''
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
-
-    def process(self):
-        #===========================================================================
-        source = ET.parse(self.file_list[0])
-        source_root = source.getroot()
-
-        destination = ET.parse(self.file_listtwo[0])
-        destination_root = destination.getroot()
-        output = self.save_list
-
-        listofFailed = xmlApp.bmwXmlApp(source, source_root).get_failedtest()
-        listofRepaired = xmlApp.bmwXmlApp(
-            destination,
-            destination_root).get_isitrepaired(listofFailed)
-        listofRightval = xmlApp.bmwXmlApp(
-            source,
-            source_root).get_rightValues(
-            listofRepaired,
-            destination_root,
-            source_root, output)
-        tkMessageBox.showinfo(
-            "Merge Finished", str(
-                listofRightval[0]) + ' values has been modified. ')
-
-        #===========================================================================
-
 
 if __name__ == "__main__":
 

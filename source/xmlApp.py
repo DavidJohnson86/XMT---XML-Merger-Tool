@@ -12,6 +12,7 @@ $Date: 2016/10/24 16:05:32CEST $
 ============================================================================
 '''
 import xml.etree.ElementTree as ET
+import xmlAppGUI
 
 
 class bmwXmlApp():
@@ -63,15 +64,17 @@ class bmwXmlApp():
         :listofFailed: list of Failed Testcases
         :return: list of Passed Testcases what is failed before
         '''
+        # THIS METHOD IS NOT LOOKING FOR DUPLICATED TESTCASES
         arr = []
         for elem in self.root:
             values = elem.findall('ATTR')
             if values[7].attrib['val'] in listofFailed and values[13].attrib['val'] == '0':
-                arr.append(values[7].attrib['val'])
+                if values[7].attrib['val'] not in arr:
+                    arr.append(values[7].attrib['val'])
 
         return arr
 
-    def get_rightValues(self, listofRepaired, destination_root, source_root, output):
+    def set_rightValues(self, listofRepaired, destination_root, source_root, output):
         '''
         Get the right values,datas from the passed test cases
         :param list listofRepaired contains the passed testcases
@@ -87,26 +90,28 @@ class bmwXmlApp():
                 # Now Find this in the Main report
                 for elemtwo in source_root.findall('SEQ'):
                     testnametwo = elemtwo[7].attrib['val']
-                    if testnameone == testnametwo:
+                    if testnameone == testnametwo and testnameone not in fixed_test:
                         fixed_test.append(testnameone)
                         # Found the same test in the Main Report
                         # check if the structure is the same
-                        #source_root.insert(0, elemone)
                         source_root.remove(elemtwo)
                         destination_root.remove(elemone)
                         source_root.append(elemone)
                         destination_root.append(elemtwo)
-                        #elemone.set(elemone.attrib['TestVariationIndex'], elemtwo)
                         counter += 1
         self.tree.write(str(output) + '\\output.xml', xml_declaration=True)
         return counter, fixed_test
 
+    def path_leaf(self, path):
+        '''Extract file name from path '''
+        head, tail = ntpath.split(path)
+        return tail or ntpath.basename(head)
 
 '''--------------------------------------Init Input Datas-------------------------------------------------------------------------------------'''
 if __name__ == "__main__":
 
     source = ET.parse(
-        "d:\\10 ----------------Development----------------\\Python\\Xml_Parser\\Test_Files\Main Report\\ISC_Sensor_Emulation_Unknown_XmlReport.xml")
+        'd:\\11_ISC_Reports\\0401803TestMain.xml ')
     source_root = source.getroot()
     destination = ET.parse(
         "d:\\10 ----------------Development----------------\\Python\\Xml_Parser\\Test_Files\Retested Report\\ISC_Sensor_Emulation_Unknown_XmlReport.xml")
@@ -125,24 +130,31 @@ if __name__ == "__main__":
     #===============================================================================
     #listofTestcases = list(XmlobjFailed.get_testnames())
     #difference = [i for i in set(listofTestcases)]
+    #test = []
+    # for i in listofTestcases:
+    #    if i not in test:
+    #        test.append(i)
+    #    else:
+    #        print i
     # print 'The number of duplicated testcases: ', len(listofTestcases) - len(difference)
     #===============================================================================
 
     '''Check for repaired Testcases'''
     #===============================================================================
-    # listofFailed = XmlobjFailed.get_failedtest()
-    # repairedTests = XmlobjPassed.get_isitrepaired(listofFailed)
+    #listofFailed = XmlobjFailed.get_failedtest()
+    #repairedTests = XmlobjPassed.get_isitrepaired(listofFailed)
     # print 'These testcases has been repaired: ', len(repairedTests), repairedTests
     #===============================================================================
 
     '''Merge the two Xml file'''
+
     #===========================================================================
-    #output = 'd:\\'
-    #listofFailed = XmlobjFailed.get_failedtest()
-    #listofRepaired = XmlobjPassed.get_isitrepaired(listofFailed)
-    # listofRightval = XmlobjPassed.get_rightValues(
-    #    listofRepaired,
-    #    destination_root,
-    #    source_root,
-    #    output)
+    # output = 'd:\\'
+    # listofFailed = XmlobjFailed.get_failedtest()
+    # listofRepaired = XmlobjPassed.get_isitrepaired(listofFailed)
+    # listofRightval = XmlobjPassed.set_rightValues(
+    #     listofRepaired,
+    #     destination_root,
+    #     source_root,
+    #     output)
     #===========================================================================
