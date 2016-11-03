@@ -14,14 +14,15 @@ $Author: David Szurovecz $
 $Date: 2016/10/24 16:20:32CEST $
 ============================================================================
 """
+import xml.etree.ElementTree as ET
 import Tkinter as tk
+import ttk as ttk
 import tkMessageBox
 import xmlApp
 import ntpath
 import time
 ntpath.basename("a/b/c")
 from easygui import fileopenbox, diropenbox
-import xml.etree.ElementTree as ET
 
 
 class MainApplication(tk.Frame):
@@ -29,91 +30,154 @@ class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         '''Init'''
         tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = tk.Frame(parent)
+        self.parent = ttk.Notebook(parent)
+        self.parent.bind_all("<<NotebookTabChanged>>", self.tabChangedEvent)
+        self.tabone = tk.Frame(self.parent)
+        self.tabtwo = tk.Frame(self.parent)
         self.parent.pack()
-        root.title('Ultimate tool for BMW ACSM5')
+        root.title('XML Manipulator for BMW ACSM5')
+        self.resetInputs()
+        self.initUI()
+
+    def tabChangedEvent(self, event):
+        self.resetInputs()
+
+    def resetInputs(self):
         self.file_one = u''
         self.file_two = u''
         self.save_list = u''
-        self.initUI()
 
     def initUI(self):
-
         #=======================================================================
-        # Draw the Frames
+        # Create The Tabs
+        #=======================================================================
+        self.parent.add(self.tabone, text='Merging')
+        self.parent.add(self.tabtwo, text='Create Testlist')
+        #=======================================================================
+        # Draw the Frames on Tab one
         #=======================================================================
         # Enter File Details Frame
-        stepOne = tk.LabelFrame(self.parent, text=" 1. Enter File Details: ")
-        stepOne.grid(row=0, columnspan=7, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
-        # OKAY Button
-        stepThree = tk.Button(self.parent, text="Merge", command=self.mergeButton)
-        stepThree.grid(row=3, column=0, sticky='W' + 'E', padx=5, pady=5, ipadx=20, ipady=5)
-        # Step Two
-        stepTwo = tk.Button(self.parent, text="Create Testlist", command=self.createList)
-        stepTwo.grid(row=3, column=2, sticky='W' + 'E', padx=5, pady=5, ipadx=20, ipady=5)
-        # Cancel Button
-        stepFour = tk.Button(self.parent, text="Cancel", command=self.cancelbutton)
-        stepFour.grid(row=3, column=1, sticky='W', padx=5, pady=5, ipadx=23, ipady=5)
-
+        hintone = tk.LabelFrame(self.tabone, text=" 1. Enter File Details: ")
+        hintone.grid(row=0, columnspan=7, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
+        # Merge Button
+        merge_button = tk.Button(self.tabone, text="Merge", command=self.mergeButton)
+        merge_button.grid(row=3, column=0, sticky='W' + 'E', padx=5, pady=5, ipadx=1, ipady=5)
+        # Exit Button
+        exit_button = tk.Button(self.tabone, text="Exit", command=self.cancelbutton)
+        exit_button.grid(row=3, column=1, sticky='W', padx=5, pady=5, ipadx=23, ipady=5)
         #=======================================================================
-        # File Selection Text
+        # Draw the Frames on Tab two
         #=======================================================================
-        inFileLbl = tk.Label(stepOne, text="Select the Main Report File: ")
-        inFileLbl.grid(row=0, column=0, sticky='E', padx=5, pady=2)
+        hinttwo = tk.LabelFrame(self.tabtwo, text=" 1. Enter File Details: ")
+        hinttwo.grid(row=0, columnspan=7, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
+        #=======================================================================
+        # File Selection 1  on Frame One
+        #=======================================================================
+        mergelbl_one = tk.Label(hintone, text="Select the Main Report File: ")
+        mergelbl_one.grid(row=0, column=0, sticky='E', padx=5, pady=2)
         # File Selection Entry
-        self.inFileTxt = tk.Entry(stepOne)
-        self.inFileTxt.grid(row=0, column=1, columnspan=7, sticky="W", pady=3)
+        self.mergeent_one = tk.Entry(hintone)
+        self.mergeent_one.grid(row=0, column=1, columnspan=7, sticky="W", pady=3)
         # File Browse Button
-        inFileBtn = tk.Button(stepOne, text="Browse ...", command=self.browseFirst)
-        inFileBtn.grid(row=0, column=8, sticky='W', padx=5, pady=2)
-
+        mergebtn_one = tk.Button(hintone, text="Browse ...", command=self.browseFirst)
+        mergebtn_one.grid(row=0, column=8, sticky='W', padx=5, pady=2)
         #=======================================================================
-        # File Selection 2 Text
+        # File Selection 2  on Frame One
         #=======================================================================
-        inFileLbl2 = tk.Label(stepOne, text="Select the Restested Report File: ")
-        inFileLbl2.grid(row=1, column=0, sticky='E', padx=5, pady=2)
+        mergelbl_two = tk.Label(hintone, text="Select the Restested Report File: ")
+        mergelbl_two.grid(row=1, column=0, sticky='E', padx=5, pady=2)
         # File Selection 2 Entry
-        self.inFileTxt2 = tk.Entry(stepOne)
-        self.inFileTxt2.grid(row=1, column=1, columnspan=7, sticky="WE", pady=2)
+        self.mergeent_two = tk.Entry(hintone)
+        self.mergeent_two.grid(row=1, column=1, columnspan=7, sticky="WE", pady=2)
         # File Save Button
-        inFileBtn2 = tk.Button(stepOne, text="Browse ...", command=self.browseSecond)
-        inFileBtn2.grid(row=1, column=8, sticky='W', padx=5, pady=2)
-
+        mergebtn_two = tk.Button(hintone, text="Browse ...", command=self.browseSecond)
+        mergebtn_two.grid(row=1, column=8, sticky='W', padx=5, pady=2)
         #=======================================================================
         # Output File Path
         #=======================================================================
-        outFileLbl = tk.Label(stepOne, text="Select the output path: ")
-        outFileLbl.grid(row=2, column=0, sticky='E', padx=5, pady=2)
+        mergelbl_three = tk.Label(hintone, text="Select the output path: ")
+        mergelbl_three.grid(row=2, column=0, sticky='E', padx=5, pady=2)
         # File Selection 2 Entry
-        self.outFileTxt = tk.Entry(stepOne)
-        self.outFileTxt.grid(row=2, column=1, columnspan=7, sticky="WE", pady=2)
+        self.mergeent_three = tk.Entry(hintone)
+        self.mergeent_three.grid(row=2, column=1, columnspan=7, sticky="WE", pady=2)
         # File Save Button
-        outFileBtn = tk.Button(stepOne, text="Browse ...", command=self.savebutton)
-        outFileBtn.grid(row=2, column=8, sticky='W', padx=5, pady=2)
+        mergebtn_three = tk.Button(hintone, text="Browse ...", command=self.savebutton)
+        mergebtn_three.grid(row=2, column=8, sticky='W', padx=5, pady=2)
+        #=======================================================================
+        # File Selection 1  on Frame Two
+        #=======================================================================
+        listlbl_one = tk.Label(hinttwo, text="Select the Main Report File: ")
+        listlbl_one.grid(row=0, column=0, sticky='E', padx=5, pady=2)
+        # File Selection 1 Entry
+        self.listent_one = tk.Entry(hinttwo)
+        self.listent_one.grid(row=0, column=1, columnspan=7, sticky="W", pady=3)
+        # File Browse Button
+        listbtn_one = tk.Button(hinttwo, text="Browse ...", command=self.browseFirst)
+        listbtn_one.grid(row=0, column=8, sticky='W', padx=5, pady=2)
+        #=======================================================================
+        # File Selection 2  on Frame Two
+        #=======================================================================
+        listlbl_two = tk.Label(hinttwo, text="Select the Testlist: ")
+        listlbl_two.grid(row=1, column=0, sticky='E', padx=5, pady=2)
+        # File Selection 2 Entry
+        self.listent_two = tk.Entry(hinttwo)
+        self.listent_two.grid(row=1, column=1, columnspan=7, sticky="WE", pady=2)
+        # File Save Button
+        listbtn_two = tk.Button(hinttwo, text="Browse ...", command=self.browseSecond)
+        listbtn_two.grid(row=1, column=8, sticky='W', padx=5, pady=2)
+        #=======================================================================
+        # Output File Path
+        #=======================================================================
+        listlbl_three = tk.Label(hinttwo, text="Select the output path: ")
+        listlbl_three.grid(row=2, column=0, sticky='E', padx=5, pady=2)
+        # File Selection 2 Entry
+        self.listent_three = tk.Entry(hinttwo)
+        self.listent_three.grid(row=2, column=1, columnspan=7, sticky="WE", pady=2)
+        # File Save Button
+        listbtn_three = tk.Button(hinttwo, text="Browse ...", command=self.savebutton)
+        listbtn_three.grid(row=2, column=8, sticky='W', padx=5, pady=2)
+        # File Testlist Button
+        listbtn_four = tk.Button(self.tabtwo, text="Create Testlist", command=self.createList)
+        listbtn_four.grid(row=3, column=0, sticky='W' + 'E', padx=5, pady=5, ipadx=1, ipady=5)
 
     def browseFirst(self):
         '''Select the files to Edit'''
+        current_tab = self.parent.tab(self.parent.select(), "text")
+        if current_tab == 'Merging':
+            current_entry = self.mergeent_one
+        elif current_tab == 'Create Testlist':
+            current_entry = self.listent_one
         self.file_one = fileopenbox(
             default=r'd:\\',
             multiple=True)
         if self.file_one:
             for item in self.file_one:
-                self.inFileTxt.insert(0, str(item.encode('utf-8')))
+                current_entry.insert(0, str(item.encode('utf-8')))
 
     def browseSecond(self):
         '''Select the files to Edit'''
+        current_tab = self.parent.tab(self.parent.select(), "text")
+        if current_tab == 'Merging':
+            current_entry = self.mergeent_two
+        elif current_tab == 'Create Testlist':
+            current_entry = self.listent_two
         self.file_two = fileopenbox(
             default=r'd:\\',
             multiple=True)
         if self.file_two:
             for item in self.file_two:
-                self.inFileTxt2.insert(0, str(item.encode('utf-8')))
+                current_entry.insert(0, str(item.encode('utf-8')))
 
     def savebutton(self):
         '''Select the files save path'''
+        current_tab = self.parent.tab(self.parent.select(), "text")
+        if current_tab == 'Merging':
+            current_entry = self.mergeent_three
+        elif current_tab == 'Create Testlist':
+            current_entry = self.listent_three
         self.save_list = diropenbox(default=r'd:\\')
         if self.save_list:
-            self.outFileTxt.insert(0, self.save_list.encode('utf-8'))
+            current_entry.insert(0, self.save_list.encode('utf-8'))
 
     def mergeButton(self):
         '''Input Verification and start the process'''
@@ -123,7 +187,7 @@ class MainApplication(tk.Frame):
             self.errormessage()
 
     def createList(self):
-        if self.file_one and self.save_list:
+        if self.file_one and self.file_two and self.save_list:
             self.parse('testlist')
         else:
             self.errormessage()
@@ -153,9 +217,8 @@ class MainApplication(tk.Frame):
     def parse(self, task):
         self.source = ET.parse(self.file_one[0])
         self.source_root = self.source.getroot()
-        if task == 'merge':
-            self.destination = ET.parse(self.file_two[0])
-            self.destination_root = self.destination.getroot()
+        self.destination = ET.parse(self.file_two[0])
+        self.destination_root = self.destination.getroot()
         self.output = self.save_list
         self.listofFailed = xmlApp.bmwXmlApp(self.source, self.source_root).get_failedtest()
         if task == 'merge':
@@ -164,7 +227,12 @@ class MainApplication(tk.Frame):
                 self.destination_root).get_isitrepaired(self.listofFailed)
             self.process()
         if task == 'testlist':
-            xmlApp.bmwXmlApp(self.source_root, self.source_root).testlist_creator(self.listofFailed)
+            xmlApp.bmwXmlApp(
+                self.source_root,
+                self.source_root).testlist_creator(
+                self.listofFailed, self.file_two[0],
+                self.output)
+            tkMessageBox.showinfo('Creation Finished', 'The Testlist has been created')
 
     def logging(self, listofFiles):
         timestamp = 'ACSM5_' + str(time.strftime('%Y_%m_%d_%H_%M'))
@@ -183,6 +251,14 @@ class MainApplication(tk.Frame):
         '''Extract file name from path '''
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
+
+    def progress(self):
+        self.pbar = tk.Tk()
+        self.pbar.title('Processing')
+        pb = ttk.Progressbar(self.pbar, orient="horizontal", length=200, mode="determinate")
+        pb.pack()
+        pb.start()
+        self.pbar.mainloop()
 
 if __name__ == "__main__":
 

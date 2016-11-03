@@ -107,7 +107,7 @@ class bmwXmlApp():
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
 
-    def testlist_creator(self, listofFailed):
+    def testlist_creator(self, listofFailed, teslist_file, output):
         '''
         BEFORE YOU USE IT IMPORTANT !!!!!!!!!!:
         1. Create in the root directory of a program ALLE.xml what you can create by your compa framework
@@ -119,7 +119,7 @@ class bmwXmlApp():
         '''
         row_counter = 0
         set_counter = 0
-        testlist_file = ET.parse('ALLE.xml')
+        testlist_file = ET.parse(teslist_file)
         testlist_root = testlist_file.getroot()
         test_status = testlist_root.findall('VARIATION-TESTLIST/TESTCONFIG/VARIATION/')
         for elem in test_status:
@@ -133,7 +133,7 @@ class bmwXmlApp():
             if elem.text in listofFailed:
                 test_states[row_counter - 2] = 1
                 test_status[modifier_counter].text = str(test_states)[1:-1:]
-        testlist_file.write('testlist.tl')
+        testlist_file.write(str(output) + '\\Test_List.tl')
 
 
 '''--------------------------------------Init Input Datas-------------------------------------------------------------------------------------'''
@@ -150,8 +150,8 @@ if __name__ == "__main__":
     XmlobjPassed = bmwXmlApp(destination, destination_root)
 
     '''Testlist Creator'''
-    listofFailed = XmlobjFailed.get_failedtest()
-    XmlobjFailed.testlist_creator(listofFailed)
+    #listofFailed = XmlobjFailed.get_failedtest()
+    # XmlobjFailed.testlist_creator(listofFailed)
 
     ''' Failed testcases'''
     #===============================================================================
