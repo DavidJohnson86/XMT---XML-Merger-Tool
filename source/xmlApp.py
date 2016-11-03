@@ -107,11 +107,40 @@ class bmwXmlApp():
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
 
+    def testlist_creator(self, listofFailed):
+        '''
+        BEFORE YOU USE IT IMPORTANT !!!!!!!!!!:
+        1. Create in the root directory of a program ALLE.xml what you can create by your compa framework
+        when saving a testlist what contains all of the Testcases.
+
+        Create a testlist with set of testcases what failed before
+        :param string variation the name of the variation file ex:
+        :param list listofFailed testcases
+        '''
+        row_counter = 0
+        set_counter = 0
+        testlist_file = ET.parse('ALLE.xml')
+        testlist_root = testlist_file.getroot()
+        test_status = testlist_root.findall('VARIATION-TESTLIST/TESTCONFIG/VARIATION/')
+        for elem in test_status:
+            if elem.tag == 'ENABLED':
+                row_counter = 0
+                modifier_counter = set_counter
+                numof_testcases = 1 + len(elem.text) / 2
+                test_states = numof_testcases * [0]
+            row_counter += 1
+            set_counter += 1
+            if elem.text in listofFailed:
+                test_states[row_counter - 2] = 1
+                test_status[modifier_counter].text = str(test_states)[1:-1:]
+        testlist_file.write('testlist.tl')
+
+
 '''--------------------------------------Init Input Datas-------------------------------------------------------------------------------------'''
 if __name__ == "__main__":
 
-    source = ET.parse(
-        'd:\\11_ISC_Reports\\0401803TestMain.xml ')
+    source = ET.parse('d:\\11_ISC_Reports\\main4271.xml')
+
     source_root = source.getroot()
     destination = ET.parse(
         "d:\\10 ----------------Development----------------\\Python\\Xml_Parser\\Test_Files\Retested Report\\ISC_Sensor_Emulation_Unknown_XmlReport.xml")
@@ -120,6 +149,10 @@ if __name__ == "__main__":
     XmlobjFailed = bmwXmlApp(source, source_root)
     XmlobjPassed = bmwXmlApp(destination, destination_root)
 
+    '''Testlist Creator'''
+    listofFailed = XmlobjFailed.get_failedtest()
+    XmlobjFailed.testlist_creator(listofFailed)
+
     ''' Failed testcases'''
     #===============================================================================
     # listofFailed = XmlobjFailed.get_failedtest()
@@ -127,7 +160,7 @@ if __name__ == "__main__":
     #===============================================================================
 
     '''Number of Duplicated Testcases(if have)'''
-    #===============================================================================
+   # ===============================================================================
     #listofTestcases = list(XmlobjFailed.get_testnames())
     #difference = [i for i in set(listofTestcases)]
     #test = []

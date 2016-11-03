@@ -31,7 +31,7 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = tk.Frame(parent)
         self.parent.pack()
-        root.title('Xml Merger tool for BMW ACSM5')
+        root.title('Ultimate tool for BMW ACSM5')
         self.file_one = u''
         self.file_two = u''
         self.save_list = u''
@@ -48,6 +48,9 @@ class MainApplication(tk.Frame):
         # OKAY Button
         stepThree = tk.Button(self.parent, text="Merge", command=self.mergeButton)
         stepThree.grid(row=3, column=0, sticky='W' + 'E', padx=5, pady=5, ipadx=20, ipady=5)
+        # Step Two
+        stepTwo = tk.Button(self.parent, text="Create Testlist", command=self.createList)
+        stepTwo.grid(row=3, column=2, sticky='W' + 'E', padx=5, pady=5, ipadx=20, ipady=5)
         # Cancel Button
         stepFour = tk.Button(self.parent, text="Cancel", command=self.cancelbutton)
         stepFour.grid(row=3, column=1, sticky='W', padx=5, pady=5, ipadx=23, ipady=5)
@@ -119,6 +122,12 @@ class MainApplication(tk.Frame):
         else:
             self.errormessage()
 
+    def createList(self):
+        if self.file_one and self.save_list:
+            self.parse('testlist')
+        else:
+            self.errormessage()
+
     def cancelbutton(self):
         root.destroy()
 
@@ -144,15 +153,18 @@ class MainApplication(tk.Frame):
     def parse(self, task):
         self.source = ET.parse(self.file_one[0])
         self.source_root = self.source.getroot()
-        self.destination = ET.parse(self.file_two[0])
-        self.destination_root = self.destination.getroot()
+        if task == 'merge':
+            self.destination = ET.parse(self.file_two[0])
+            self.destination_root = self.destination.getroot()
         self.output = self.save_list
         self.listofFailed = xmlApp.bmwXmlApp(self.source, self.source_root).get_failedtest()
-        self.listofRepaired = xmlApp.bmwXmlApp(
-            self.destination,
-            self.destination_root).get_isitrepaired(self.listofFailed)
         if task == 'merge':
+            self.listofRepaired = xmlApp.bmwXmlApp(
+                self.destination,
+                self.destination_root).get_isitrepaired(self.listofFailed)
             self.process()
+        if task == 'testlist':
+            xmlApp.bmwXmlApp(self.source_root, self.source_root).testlist_creator(self.listofFailed)
 
     def logging(self, listofFiles):
         timestamp = 'ACSM5_' + str(time.strftime('%Y_%m_%d_%H_%M'))
